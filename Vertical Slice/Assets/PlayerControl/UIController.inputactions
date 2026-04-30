@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "UIController",
+    "maps": [
+        {
+            "name": "InGame",
+            "id": "f5d36af4-8b33-4528-97aa-df0a9cbf09f5",
+            "actions": [
+                {
+                    "name": "TogglelConsole",
+                    "type": "Button",
+                    "id": "5f57396c-17d7-4ee3-86fd-282be9a8095d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "f71f3707-8892-48fa-bab6-8ff0cd37c607",
+                    "path": "<Keyboard>/backquote",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "TogglelConsole",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

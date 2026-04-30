@@ -1,0 +1,5 @@
+# Milestone 1
+The CameraController Visual Scripting Graph controls the motion of the camera. It monitors the Unity PlayerInput component. As the player presses certain buttons, the PlayerInput component sends a Unity event and passes it to the CameraController Graph. On the activation of the event, the CameraController Graph moves the MainCamera object. 
+
+1. More specific details are added to the chart, and it now shows the flow of the interaction between objects and scripts. The logic of the auto-generation of maps is added; the player input logic is added; the unit control logic is added.
+2. I used a finite state machine for the console, the public enum DebugMode. The player uses the console to toggle DebugMode between the state of On and Off. There are if() statements in the methods of multiple scripts. If the state of DebugMode is On, more detailed information will be printed by Debug.Log() as these methods are used, so that the developer (which is me) will be able to get the debug for further development when and only when needed. 
