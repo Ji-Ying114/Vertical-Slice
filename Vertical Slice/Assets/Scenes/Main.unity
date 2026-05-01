@@ -179,8 +179,6 @@ GameObject:
   - component: {fileID: 212822026}
   - component: {fileID: 212822025}
   - component: {fileID: 212822024}
-  - component: {fileID: 212822029}
-  - component: {fileID: 212822028}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -271,65 +269,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &212822028
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 212822023}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Actions: {fileID: -944628639613478452, guid: e18ff506bd985844a9e82f75b9e60911, type: 3}
-  m_NotificationBehavior: 2
-  m_UIInputModule: {fileID: 0}
-  m_DeviceLostEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_DeviceRegainedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ControlsChangedEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_ActionEvents:
-  - m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 212822029}
-        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
-        m_MethodName: ToggleConsole
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-    m_ActionId: 5f57396c-17d7-4ee3-86fd-282be9a8095d
-    m_ActionName: InGame/TogglelConsole[/Keyboard/backquote]
-  m_NeverAutoSwitchControlSchemes: 0
-  m_DefaultControlScheme: 
-  m_DefaultActionMap: InGame
-  m_SplitScreenIndex: -1
-  m_Camera: {fileID: 0}
---- !u!114 &212822029
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 212822023}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 24dbe309fa0c8c9418a6c10d7467c58a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  console: {fileID: 1780411061}
 --- !u!1 &356235069
 GameObject:
   m_ObjectHideFlags: 0
@@ -520,6 +459,7 @@ GameObject:
   - component: {fileID: 519420033}
   - component: {fileID: 519420036}
   - component: {fileID: 519420037}
+  - component: {fileID: 519420038}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -719,6 +659,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: d347a646-1444-4cdb-bc9b-8c6461f1b6a2
     m_ActionName: InGame/Zoom[/Mouse/scroll/y]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 519420038}
+        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+        m_MethodName: ToggleConsole
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: dfd13893-6a60-484d-8c15-10e9eeee5dd7
+    m_ActionName: InGame/ToggleConsole[/Keyboard/backquote]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: Keyboard&Mouse
   m_DefaultActionMap: InGame
@@ -740,6 +696,19 @@ MonoBehaviour:
     _json: '{"nest":{"source":"Macro","macro":0,"embed":null}}'
     _objectReferences:
     - {fileID: 11400000, guid: cf6934a98b721ef46a7407c2acc4a9c6, type: 2}
+--- !u!114 &519420038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24dbe309fa0c8c9418a6c10d7467c58a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  console: {fileID: 1780411061}
 --- !u!1 &539901540
 GameObject:
   m_ObjectHideFlags: 0
@@ -1315,8 +1284,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _data:
-    _json: '{"declarations":{"Kind":"Scene","collection":{"$content":[],"$version":"A"},"$version":"A"}}'
-    _objectReferences: []
+    _json: '{"declarations":{"Kind":"Scene","collection":{"$content":[{"name":"PlayerInput","value":{"$content":0,"$type":"UnityEngine.Object"},"typeHandle":{"Identification":"UnityEngine.InputSystem.PlayerInput,
+      Unity.InputSystem, Version=1.14.2.0, Culture=neutral, PublicKeyToken=null","$version":"A"},"$version":"A"}],"$version":"A"},"$version":"A"}}'
+    _objectReferences:
+    - {fileID: 519420036}
 --- !u!4 &1497584490
 Transform:
   m_ObjectHideFlags: 0
@@ -1429,7 +1400,10 @@ MonoBehaviour:
   enabledLandformSettings: []
   fixedSeed: 1
   setSeed: 1
-  noiseScale: 1
+  noiseScale: 0.02
+  fbmOctaves: 4
+  fbmPersistence: 0.5
+  fbmLacunarity: 2
 --- !u!4 &1660021165
 Transform:
   m_ObjectHideFlags: 0
@@ -1438,7 +1412,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1660021163}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1498,7 +1472,7 @@ MonoBehaviour:
     biomeType: 4
     checkTemperatureType: 0
     temperatureType: 1
-  defaultTileBase: {fileID: 11400000, guid: 28915d1fdeee74345ae5cf90af97ef8c, type: 2}
+  defaultTileBase: {fileID: 11400000, guid: e00f21818fb00f14bbe56813bfbe055e, type: 2}
 --- !u!1 &1780411061
 GameObject:
   m_ObjectHideFlags: 0
@@ -1825,8 +1799,8 @@ SceneRoots:
   m_Roots:
   - {fileID: 519420032}
   - {fileID: 619394802}
-  - {fileID: 1660021165}
   - {fileID: 14637123}
   - {fileID: 212822027}
   - {fileID: 811798634}
   - {fileID: 1497584490}
+  - {fileID: 1660021165}

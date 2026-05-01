@@ -90,6 +90,10 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private bool fixedSeed;
     [SerializeField] private int setSeed;
     [SerializeField] private float noiseScale;
+    
+    [SerializeField] private int fbmOctaves = 4;              // FBM 层数
+    [SerializeField] private float fbmPersistence = 0.5f;     // 每层的幅度衰减系数
+    [SerializeField] private float fbmLacunarity = 2f;        // 每层的频率增加系数
 
     private int seed;
     private int mapWidth;
@@ -221,6 +225,34 @@ public class MapGenerator : MonoBehaviour
     public int GetMapSeed()
     {
         return seed;
+    }
+
+//------------------------------------------------------------------------
+    
+    // 分形布朗运动 (Fractal Brownian Motion)
+    // 通过多层 Perlin 噪声叠加生成平滑且细节丰富的噪声
+    // baseScale: 基础缩放（对应原来的 noiseScale）
+    // offsetX/offsetY: 噪声偏移（用于生成不同的噪声）
+    private float GenerateFBMNoise(int x, int y, float baseScale, float offsetX, float offsetY)
+    {
+        float value = 0f;
+        float amplitude = 1f;
+        float frequency = 1f;
+        float maxValue = 0f;
+        
+        for (int i = 0; i < fbmOctaves; i++)
+        {
+            float sampleX = (x * baseScale * frequency) + offsetX;
+            float sampleY = (y * baseScale * frequency) + offsetY;
+            
+            value += Mathf.PerlinNoise(sampleX, sampleY) * amplitude;
+            maxValue += amplitude;
+            
+            amplitude *= fbmPersistence;
+            frequency *= fbmLacunarity;
+        }
+        
+        return Mathf.Clamp01(value / maxValue);
     }
 
 //------------------------------------------------------------------------
@@ -362,7 +394,7 @@ public class MapGenerator : MonoBehaviour
     }
 
     
-    // 生成海拔高度地图
+    // 生成海拔高度地图 - 使用 FBM 确保平滑过渡
     private float[,] GenerateElevationMap()
     {
         float[,] elevationMap = new float[mapWidth, mapHeight];
@@ -371,15 +403,8 @@ public class MapGenerator : MonoBehaviour
         {
             for (int y = 0; y < mapHeight; y++)
             {
-                // 使用Perlin噪声产生连贯的地形
-                float noiseValue = Mathf.PerlinNoise(
-                    x * noiseScale + seed * 0.1f,
-                    y * noiseScale + seed * 0.1f
-                );
-                
-                // 添加Random产生的细节噪声
-                float randomVariation = (float)mapRandom.NextDouble() * 0.1f;
-                elevationMap[x, y] = Mathf.Clamp01(noiseValue + randomVariation);
+                // 使用 FBM 生成平滑且细节丰富的地形
+                elevationMap[x, y] = GenerateFBMNoise(x, y, noiseScale, seed * 0.1f, seed * 0.1f);
             }
         }
         if (Console.Instance.debugMode == DebugMode.On)
@@ -399,7 +424,7 @@ public class MapGenerator : MonoBehaviour
         return elevationMap;
     }
 
-    // 生成温度地图 - 基于纬度和Perlin噪声
+    // 生成温度地图 - 基于纬度和 FBM 噪声
     private float[,] GenerateTemperatureMap()
     {
         float[,] temperatureMap = new float[mapWidth, mapHeight];
@@ -409,17 +434,12 @@ public class MapGenerator : MonoBehaviour
         {
             for (int y = 0; y < mapHeight; y++)
             {
-                float noiseValue = Mathf.PerlinNoise(
-                    x * noiseScale + seed * 0.1f + 100f,
-                    y * noiseScale + seed * 0.1f + 100f
-                );
-                
-                // 添加Random产生的变化
-                float randomVariation = (float)mapRandom.NextDouble() * 0.1f;
+                // 使用 FBM 生成平滑的温度变化
+                float noiseValue = GenerateFBMNoise(x, y, noiseScale, seed * 0.1f + 100f, seed * 0.1f + 100f);
                 
                 // 考虑纬度因素：赤道处温度最高，两极最低
                 float latitudeFactor = 1f - Mathf.Abs(y - equatorY) / equatorY;
-                temperatureMap[x, y] = Mathf.Clamp01((noiseValue + randomVariation) * latitudeFactor);
+                temperatureMap[x, y] = Mathf.Clamp01(noiseValue * latitudeFactor);
             }
         }
         if (Console.Instance.debugMode == DebugMode.On){
@@ -438,7 +458,7 @@ public class MapGenerator : MonoBehaviour
         return temperatureMap;
     }
 
-    // 生成湿度地图 - 基于Perlin噪声
+    // 生成湿度地图 - 基于 FBM 噪声
     private float[,] GenerateHumidityMap(float[,] elevationMap)
     {
         float[,] humidityMap = new float[mapWidth, mapHeight];
@@ -447,17 +467,12 @@ public class MapGenerator : MonoBehaviour
         {
             for (int y = 0; y < mapHeight; y++)
             {
-                float noiseValue = Mathf.PerlinNoise(
-                    x * noiseScale + seed * 0.1f + 200f,
-                    y * noiseScale + seed * 0.1f + 200f
-                );
-                
-                // 添加Random产生的变化
-                float randomVariation = (float)mapRandom.NextDouble() * 0.1f;
+                // 使用 FBM 生成平滑的湿度变化
+                float noiseValue = GenerateFBMNoise(x, y, noiseScale, seed * 0.1f + 200f, seed * 0.1f + 200f);
                 
                 // 水域处湿度较高，高地处湿度较低
                 float elevationModifier = 1f - elevationMap[x, y];
-                humidityMap[x, y] = Mathf.Clamp01((noiseValue + randomVariation) * (1f + elevationModifier));
+                humidityMap[x, y] = Mathf.Clamp01(noiseValue * (1f + elevationModifier));
             }
         }
         if (Console.Instance.debugMode == DebugMode.On){
