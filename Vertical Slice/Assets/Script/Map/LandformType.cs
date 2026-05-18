@@ -18,4 +18,7 @@ public abstract class LandformType : ScriptableObject
     public float elevationChanceFactor;
     public float humidityChanceFactor;
     public float temperatureChanceFactor;
+
+    [Header("Movement Settings")]
+    public int additionalMovementCost;
 }

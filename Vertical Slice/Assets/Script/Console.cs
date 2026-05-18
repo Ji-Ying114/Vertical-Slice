@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Unity.VisualScripting;
 
 public enum DebugMode
 {
@@ -221,6 +222,45 @@ public class Console : MonoBehaviour
                 {
                     Log("Usage: render - render all tiles");
                     Log("       render x y - render specific tile");
+                }
+                break;
+            case "nextturn":
+                GameController.Instance.NextTurn();
+                break;
+            case "zoomspeed":
+                if (parts.Length == 2)
+                {
+                    if (float.TryParse(parts[1], out float zoomSpeed))
+                    {
+                        EventBus.Trigger("SetZoomSpeed", zoomSpeed);
+                        Log("Zoom speed set to " + zoomSpeed);
+                    }
+                    else
+                    {
+                        Log("Invalid value for zoomspeed");
+                    }
+                }
+                else
+                {
+                    Log("Usage: zoomspeed [value]");
+                }
+                break;
+            case "cameraspeed":
+                if (parts.Length == 2)
+                {
+                    if (float.TryParse(parts[1], out float cameraSpeed))
+                    {
+                        EventBus.Trigger("SetCameraSpeed", cameraSpeed);
+                        Log("Camera speed set to " + cameraSpeed);
+                    }
+                    else
+                    {
+                        Log("Invalid value for cameraspeed");
+                    }
+                }
+                else
+                {
+                    Log("Usage: cameraspeed [value]");
                 }
                 break;
             default:
