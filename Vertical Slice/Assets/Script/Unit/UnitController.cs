@@ -55,25 +55,25 @@ public class UnitController : MonoBehaviour
         }
     }
 
-private void Update()
-{
-    if (Mouse.current.rightButton.wasPressedThisFrame)
+    private void Update()
     {
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-            return;
-
-        if (currentSelectedUnit == null || !hasValidMovementRange || isMoving)  // 添加 isMoving 检查
-            return;
-
-        Vector3Int mouseGridPos = mapInteractionHelper.GetMouseMapPosition();
-        Vector2Int targetPos = new Vector2Int(mouseGridPos.x, mouseGridPos.y);
-
-        if (currentMovementRange.reachableCells.Contains(targetPos))
+        if (Mouse.current.rightButton.wasPressedThisFrame)
         {
-            TryMoveTo(targetPos);
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                return;
+
+            if (currentSelectedUnit == null || !hasValidMovementRange || isMoving)
+                return;
+
+            Vector3Int mouseGridPos = mapInteractionHelper.GetMouseMapPosition();
+            Vector2Int targetPos = new Vector2Int(mouseGridPos.x, mouseGridPos.y);
+
+            if (currentMovementRange.reachableCells.Contains(targetPos))
+            {
+                TryMoveTo(targetPos);
+            }
         }
     }
-}
 
     private void OnUnitSelected(GameObject selectedObject)
     {
@@ -114,79 +114,82 @@ private void Update()
         hasValidMovementRange = currentMovementRange.reachableCells.Count > 0;
     }
 
-private void TryMoveTo(Vector2Int targetPos)
-{
-    if (!hasValidMovementRange || currentSelectedUnit == null)
-        return;
-
-    // 如果已经在移动中，忽略新的移动指令
-    if (isMoving)
-        return;
-
-    // 获取目标格子信息
-    if (!currentMovementRange.remainingMP.TryGetValue(targetPos, out int remainingAfterMove))
+    private void TryMoveTo(Vector2Int targetPos)
     {
-        Debug.LogWarning("目标格子剩余移动力未记录");
-        return;
-    }
-    if (!currentMovementRange.paths.TryGetValue(targetPos, out List<Vector2Int> path))
-    {
-        Debug.LogWarning("目标格子路径未记录");
-        return;
-    }
+        if (!hasValidMovementRange || currentSelectedUnit == null)
+            return;
 
-    // 计算消耗
-    int startMP = currentSelectedUnit.currentMovementPoint;
-    int consumedMP = startMP - remainingAfterMove;
+        if (isMoving)
+            return;
 
-    // 1. 立刻扣除移动力
-    currentSelectedUnit.currentMovementPoint = remainingAfterMove;
-
-    // 2. 锁定移动，防止动画期间再次点击
-    isMoving = true;
-
-    // 3. 暂时隐藏旧的移动范围（可选，视觉上更干净）
-    if (moveableTileDisplayer != null)
-        moveableTileDisplayer.ClearAllTiles();
-
-    // 4. 执行移动动画或瞬移
-    UnitAnimation anim = currentSelectedUnit.GetComponent<UnitAnimation>();
-    if (anim != null)
-    {
-        // 如果动画组件已经在移动中，理论上不会进入，但做个保险
-        if (anim.IsMoving) return;
-
-        anim.StartMovement(path, () =>
+        if (!currentMovementRange.remainingMP.TryGetValue(targetPos, out int remainingAfterMove))
         {
-            // 动画完成：更新单位逻辑坐标
-            currentSelectedUnit.ChangePosition(targetPos.x, targetPos.y);
+            Debug.LogWarning("目标格子剩余移动力未记录");
+            return;
+        }
+        if (!currentMovementRange.paths.TryGetValue(targetPos, out List<Vector2Int> path))
+        {
+            Debug.LogWarning("目标格子路径未记录");
+            return;
+        }
 
-            // 解锁移动
+        int startMP = currentSelectedUnit.currentMovementPoint;
+        int consumedMP = startMP - remainingAfterMove;
+
+        // 保存本地引用，防止动画期间选中状态改变导致回调空引用
+        Unit movingUnit = currentSelectedUnit;
+
+        // 立刻扣除移动力
+        movingUnit.currentMovementPoint = remainingAfterMove;
+
+        // 锁定移动，防止动画期间再次点击
+        isMoving = true;
+
+        // 暂时隐藏旧的移动范围
+        if (moveableTileDisplayer != null)
+            moveableTileDisplayer.ClearAllTiles();
+
+        // 执行移动动画或瞬移
+        UnitAnimation anim = movingUnit.GetComponent<UnitAnimation>();
+        if (anim != null)
+        {
+            if (anim.IsMoving) return;
+
+            anim.StartMovement(path, () =>
+            {
+                // 动画完成：更新单位逻辑坐标
+                movingUnit.ChangePosition(targetPos.x, targetPos.y);
+
+                // 解锁移动
+                isMoving = false;
+
+                // 刷新移动范围（如果仍然选中该单位）
+                if (currentSelectedUnit == movingUnit)
+                {
+                    RefreshMovementRange();
+                    if (moveableTileDisplayer != null)
+                        moveableTileDisplayer.RefreshDisplay();
+                }
+            });
+        }
+        else
+        {
+            // 无动画组件，直接瞬移
+            movingUnit.ChangePosition(targetPos.x, targetPos.y);
+
             isMoving = false;
 
-            // 刷新移动范围（基于新坐标）并重新显示
-            RefreshMovementRange();
-            if (moveableTileDisplayer != null)
-                moveableTileDisplayer.RefreshDisplay();
-        });
-    }
-    else
-    {
-        // 无动画组件，直接瞬移
-        currentSelectedUnit.ChangePosition(targetPos.x, targetPos.y);
+            if (currentSelectedUnit == movingUnit)
+            {
+                RefreshMovementRange();
+                if (moveableTileDisplayer != null)
+                    moveableTileDisplayer.RefreshDisplay();
+            }
+        }
 
-        // 瞬移完成
-        isMoving = false;
-
-        // 刷新移动范围并显示
-        RefreshMovementRange();
-        if (moveableTileDisplayer != null)
-            moveableTileDisplayer.RefreshDisplay();
+        if (Console.Instance != null && Console.Instance.debugMode == DebugMode.On)
+        {
+            Debug.Log($"单位移动到 ({targetPos.x}, {targetPos.y})，消耗 {consumedMP} 移动力，剩余 {remainingAfterMove}");
+        }
     }
-
-    if (Console.Instance.debugMode == DebugMode.On)
-    {
-        Debug.Log($"单位移动到 ({targetPos.x}, {targetPos.y})，消耗 {consumedMP} 移动力，剩余 {remainingAfterMove}");
-    }
-}
 }

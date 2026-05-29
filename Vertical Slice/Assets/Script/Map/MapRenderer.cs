@@ -50,6 +50,7 @@ public class MapRenderer : MonoBehaviour
     /// <summary>遍历地图所有Tile并渲染，寻找符合规则的瓦片进行匹配</summary>
     public void RenderMap()
     {
+        Canvas.ForceUpdateCanvases();
         if (MapGenerator.Instance == null || MapGenerator.Instance.tiles == null)
         {
             Debug.LogError("MapGenerator or tiles not set!");

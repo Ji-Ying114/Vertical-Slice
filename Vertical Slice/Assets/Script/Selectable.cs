@@ -4,7 +4,7 @@ using UnityEngine;
 public enum SelectionType
 {
     Unit,
-    City,
+    Town,
 }
 
 public class Selectable : MonoBehaviour

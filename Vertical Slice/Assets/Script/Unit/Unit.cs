@@ -15,6 +15,7 @@ public class Unit : MonoBehaviour
     [SerializeField] private GameObject thisUnit;
     [SerializeField] private Transform unitTransform;
     [SerializeField] private UnitData unitData;
+    [SerializeField] private GameObject lightPillar;
 
     [Header("Runtime Data")]
     [SerializeField] public int currentMovementPoint;
@@ -26,11 +27,39 @@ public class Unit : MonoBehaviour
 
     public UnitData UnitData => unitData;
 
+    private SelectionManager selectionManager;
+
     void OnEnable()
     {
         currentMovementPoint = unitData.movementPoint;
         currentHp = unitData.hp;
         transform.position = new Vector3(0, 0, 1);
+
+        // 初始化lightPillar为隐藏状态
+        if (lightPillar != null)
+        {
+            lightPillar.SetActive(false);
+        }
+
+        // 订阅选择事件
+        if (selectionManager == null)
+            selectionManager = FindObjectOfType<SelectionManager>();
+
+        if (selectionManager != null)
+        {
+            selectionManager.SelectionChanged += OnUnitSelected;
+            selectionManager.Deselection += OnUnitDeselected;
+        }
+    }
+
+    void OnDisable()
+    {
+        // 取消订阅选择事件
+        if (selectionManager != null)
+        {
+            selectionManager.SelectionChanged -= OnUnitSelected;
+            selectionManager.Deselection -= OnUnitDeselected;
+        }
     }
 
     public void InitPosition(int x, int y)
@@ -78,6 +107,24 @@ public class Unit : MonoBehaviour
         if (currentHp <= 0)
         {
             Destroy(thisUnit);
+        }
+    }
+
+    private void OnUnitSelected(GameObject selectedObject)
+    {
+        // 如果选中的是这个单位，就显示lightPillar
+        if (selectedObject == thisUnit && lightPillar != null)
+        {
+            lightPillar.SetActive(true);
+        }
+    }
+
+    private void OnUnitDeselected()
+    {
+        // 取消选中时隐藏lightPillar
+        if (lightPillar != null)
+        {
+            lightPillar.SetActive(false);
         }
     }
 }

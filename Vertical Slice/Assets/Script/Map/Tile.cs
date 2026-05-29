@@ -30,18 +30,28 @@ using UnityEngine;
         public int forMediumUnit;
         public int forHeavyUnit;
     }
+    [System.Serializable]
+    public struct ResourceProduction
+    {
+        public float foodProduction;
+        public float materialProduction;
+    }
 
 public class Tile
 {
     private TileID tileID;
     private TileData tileData;
     private MovementCost movementCost;
+    private ResourceProduction resourceProduction;
+    private int owningTown;
 
     public TileID GetTileID() => tileID;
     public TileData GetTileData() => tileData;
     public int GetLightUnitMovementCost() => movementCost.forLightUnit;
     public int GetMediumUnitMovementCost() => movementCost.forMediumUnit;
     public int GetHeavyUnitMovementCost() => movementCost.forHeavyUnit;
+    public ResourceProduction GetResourceProduction() => resourceProduction;
+    public int GetOwningTown() => owningTown;
 
     public Tile(TileID id)
     {
@@ -58,6 +68,8 @@ public class Tile
         };
         // 基于默认 tileData 计算一次（后续会被 SetTileData 覆盖）
         movementCost = ComputeMovementCost();
+        resourceProduction = ComputeResourceProduction();
+        owningTown = -1;
     }
 
     public void SetTileData(TileData newTileData)
@@ -65,6 +77,10 @@ public class Tile
         tileData = newTileData;
         // 根据新的真实数据重新计算移动消耗
         movementCost = ComputeMovementCost();
+    }
+    public void SetOwningTown(int town)
+    {
+        owningTown = town;
     }
 
     public void AddTileFactor(TileFactor tileFactor, int duration, float multiplier)
@@ -114,6 +130,18 @@ public class Tile
             forLightUnit = 5 + extra,
             forMediumUnit = 5 + extra * 2,
             forHeavyUnit = 5 + extra * 3
+        };
+    }
+    private ResourceProduction ComputeResourceProduction()
+    {
+        int food = 1;
+        int material = 1;
+
+        // further work to be done here
+        return new ResourceProduction
+        {
+            foodProduction = food,
+            materialProduction = material
         };
     }
 }

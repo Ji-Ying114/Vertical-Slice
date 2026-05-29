@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b882963ac6e90be41ae809bef83273c8, type: 3}
   m_Name: Scout
   m_EditorClassIdentifier: 
-  unitType: 2
+  unitType: 0
   unitName: Scout
   movementPoint: 30
   hp: 50
   visionRange: 5
+  productionCost:
+    foodProduction: 4
+    materialProduction: 2

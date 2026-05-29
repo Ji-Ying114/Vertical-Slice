@@ -1,14 +1,34 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class NextTurnButton : MonoBehaviour
 {
+    [SerializeField] private TMP_Text buttonText;
+
+    private void Update()
+    {
+        if (buttonText == null || TurnManager.Instance == null) return;
+
+        switch (TurnManager.Instance.GetPendingActionType())
+        {
+            case PendingActionType.CommandUnit:
+                buttonText.text = "Command Unit";
+                break;
+            case PendingActionType.TownDevelopment:
+                buttonText.text = "Town Development";
+                break;
+            default:
+                buttonText.text = "Next Turn";
+                break;
+        }
+    }
+
     public void OnNextTurnClicked()
     {
         if (GameController.Instance != null)
         {
-            GameController.Instance.NextTurn();
-            Debug.Log("下一回合按钮被点击，正在进入下一回合...");
+            GameController.Instance.TryEndTurnForCurrentPlayer();
         }
         else
         {

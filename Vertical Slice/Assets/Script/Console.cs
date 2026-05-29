@@ -62,6 +62,7 @@ public class Console : MonoBehaviour
     // 显示控制台。
     private void ShowConsole()
     {
+        Canvas.ForceUpdateCanvases();
         isVisible = true;
         if (consolePanel != null)
         {

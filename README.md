@@ -43,3 +43,17 @@ It is a state machine that indicates if something and what type of object (if tr
 It is a state machine that controls the debug log. If it is on, more information will be logged.
 ![Unit.cs](image-5.png)
 It is a state machine that indicates the what the unit is doing, which will be used to control the animation.
+
+# Milestone 3
+## Q1
+![Screenshot](image-6.png)
+1. This shader graph is found in Assets -> Shaders -> LightPillarLtGraph; beside is the material using it (LightPillarLtMat). The LightPillarGraph in the same folder is not used, because it is too buggy. LightPillarLtMat is used on the LightPillar object on the object Assets -> Prefabs -> Scout.
+2. I used a split node in the graph to split a UV to represent the horizontal and the vertical changes of the alpha value of the material respectively. Series of calculations are used to control the transparency. The horizontal change of the alpha value is f(R) = HorizontalA(R + HorizontalB)^2 + HorizontalC, which means that I can make the material more transparent in the middle and less on the edge (or vice versa) with a smooth transition, and I can change the intensity of change, the center of symmetry and the base value of alpha by operating these 3 properties respectively. The vertical change of the alpha value is f(G) = VerticalK * G + VerticalB, which means that I can make the material more transparent at the top and less at the bottom (or vice versa) with a smooth transition, and I can change the intensity of change and the position where the material becomes completely transparent by operating these 2 properties respectively. Its blending mode is addative, so that it makes the area it covers brigther, which makes it look more like a beam of light.
+## Q2
+1. I fixed the bugs that influenced the gameplay. Which includes: a. the movement range and the directions are not correctly calculated; b. the game collapses when the player tries to proceed to the next turn when the animation of the unit is still playing.
+2. I added a light pillar (where a shader is used) to highlight the selected unit so that the player focus more on it (and therefore less likely to ignore the fact that he or she has selected something).
+3. The player does not have to use the console to play the game anymore!
+## Q3
+1. I built the town framework so that the player can really own a developing town, which makes the game more complicated and closer to a game that provides a complete gameplay loop. It is part of the core mechanic of this game, and the center of the converting of the resources. The town now can gather resources and develop by itself and the player can do something with it. More functions to be added in the future.
+2. Like Civilization VI, he player now cannot proceed to the next turn when the required operations are not done: it prevents players from forgetting to operate the units and towns -- it is not useful yet at the current stage, but when the game become - hopefully - complicated enough, it can be a very useful function. 
+3. Framework for more complicated terrains and landform built (assets not yet added). I built the framework to introduce more variety to the map so that the players will have more diverse options to do with the map, which will make the game more interesting. 

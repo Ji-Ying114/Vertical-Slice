@@ -5,7 +5,7 @@ public class TestInitializer : MonoBehaviour
 {
     [SerializeField] private int width = 20;
     [SerializeField] private int height = 20;
-    [SerializeField] private GameObject scoutUnitPrefab; // 需要指定侦察单位预制体
+    [SerializeField] private GameObject scoutUnitPrefab;
 
     private void Start()
     {
@@ -27,7 +27,7 @@ public class TestInitializer : MonoBehaviour
             Debug.LogWarning("TestInitializer: MapRenderer.Instance 不存在，地图未渲染");
         }
 
-        // 3. 收集所有非水下单元格（地形不是 Default）
+        // 3. 收集所有非水下单元格
         Tile[,] tiles = MapGenerator.Instance.tiles;
         int mapWidth = tiles.GetLength(0);
         int mapHeight = tiles.GetLength(1);
@@ -46,14 +46,25 @@ public class TestInitializer : MonoBehaviour
 
         if (landTiles.Count == 0)
         {
-            Debug.LogError("TestInitializer: 未找到任何陆地单元格，无法生成单位！");
+            Debug.LogError("TestInitializer: 未找到任何陆地单元格，无法生成单位和城镇！");
             return;
         }
 
-        // 随机选择一个陆地格子
+        // 随机选择出生点
         Vector2Int spawnPos = landTiles[Random.Range(0, landTiles.Count)];
 
-        // 4. 生成侦察单位
+        // 4. 创建起始城镇（必须在地图上先生成城镇，再生成单位，顺序可调）
+        if (TownManager.Instance != null)
+        {
+            TownManager.Instance.CreateTown("Capital", new TileID { x = spawnPos.x, y = spawnPos.y }, 1);
+            Debug.Log($"TestInitializer: 城镇 'Capital' 已创建在 ({spawnPos.x}, {spawnPos.y})");
+        }
+        else
+        {
+            Debug.LogError("TestInitializer: TownManager.Instance 不存在，无法创建城镇！");
+        }
+
+        // 5. 生成侦察单位
         if (scoutUnitPrefab == null)
         {
             Debug.LogError("TestInitializer: scoutUnitPrefab 未赋值！");
@@ -77,7 +88,7 @@ public class TestInitializer : MonoBehaviour
 
         unit.InitPosition(spawnPos.x, spawnPos.y);
 
-        // 5. 移动摄像机到单位位置
+        // 6. 移动摄像机到单位/城镇位置
         Camera mainCamera = Camera.main;
         if (mainCamera != null)
         {
@@ -89,6 +100,6 @@ public class TestInitializer : MonoBehaviour
             Debug.LogError("TestInitializer: 未找到主摄像机！");
         }
 
-        Debug.Log($"TestInitializer: 地图 ({width}x{height}) 已生成，侦察单位出生在 ({spawnPos.x}, {spawnPos.y})");
+        Debug.Log($"TestInitializer: 地图 ({width}x{height}) 已生成，城镇和侦察单位出生在 ({spawnPos.x}, {spawnPos.y})");
     }
 }

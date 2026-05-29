@@ -63,7 +63,7 @@ void Update()
     }
 }
 
-    void Select(GameObject newSelected)
+    public void Select(GameObject newSelected)
     {
         // 如果点的是同一个物体，可以选择忽略或保持
         if (currentSelected == newSelected) return;
