@@ -70,6 +70,7 @@ This is a vertical slice of a turn-based 4X game. The core game loop is eXplore,
 ![TriggerMethod](image-7.png)
 ![Script](image-8.png)
 ![Inspector](image-9.png)
+![Shader graph (SelectedFlashyGraph.shadergraph)](image-10.png)
 ## Q3
 Before a game is coded, the final experience must be imagined. Using the MDA framework, work backward from aesthetics to the required dynamics, then to specific mechanics. At this stage, technology is not a concern, but the intended feel of the game and what the player does repeatedly.
 
