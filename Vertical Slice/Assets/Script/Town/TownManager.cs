@@ -14,6 +14,9 @@ public class TownManager : MonoBehaviour
     [Header("Town Settings")]
     [SerializeField] public int foodForGrowth = 10;
 
+    [Header("Unit Spawning")]
+    [SerializeField] private List<UnitPrefabEntry> unitPrefabs;
+
     private List<Town> towns = new List<Town>();
     private List<GameObject> townLabelInstances = new List<GameObject>();
     private int expandingTownId = -1;
@@ -83,7 +86,6 @@ public class TownManager : MonoBehaviour
             townLabelInstances.Add(labelObj);
         }
 
-        // 首次渲染已由 OnTownsUpdated 事件触发（订阅在 TownRenderer 中）
         OnTownsUpdated?.Invoke();
         return town;
     }
@@ -122,7 +124,6 @@ public class TownManager : MonoBehaviour
         town.Recalculate();
         ExitExpansionMode();
 
-        // 刷新候选地块（如果仍处于扩张模式）
         if (TownRenderer.Instance != null)
             TownRenderer.Instance.ClearExpansionCandidates();
 
@@ -167,10 +168,24 @@ public class TownManager : MonoBehaviour
         {
             town.Recalculate();
             ResourceProduction production = town.GetResourceProduction();
-            ResourceProduction remaining = town.GetRemainingResource();
-            remaining.foodProduction += production.foodProduction;
-            remaining.materialProduction += production.materialProduction;
+            town.ModifyRemainingResource(production.foodProduction, production.materialProduction);
 
+            // 生产建筑/单位
+            List<ProductionQueueItem> completedItems = town.ProcessProduction();
+            foreach (var item in completedItems)
+            {
+                if (item.IsBuilding)
+                {
+                    town.AddBuilding(item.building);
+                }
+                else if (item.IsUnit)
+                {
+                    SpawnUnit(item.unitData, town.GetPosition());
+                }
+            }
+
+            // 人口增长（基于剩余食物）
+            ResourceProduction remaining = town.GetRemainingResource();
             while (remaining.foodProduction >= foodForGrowth)
             {
                 remaining.foodProduction -= foodForGrowth;
@@ -179,5 +194,57 @@ public class TownManager : MonoBehaviour
             town.SetRemainingResource(remaining);
         }
         OnTownsUpdated?.Invoke();
+    }
+
+    private void SpawnUnit(UnitData unitData, TileID position)
+    {
+        if (unitData == null) return;
+
+        // 优先按 UnitData 名称匹配预制件（避免资源实例不同导致匹配失败）
+        GameObject prefab = GetUnitPrefabByName(unitData.unitName);
+        if (prefab == null)
+        {
+            Debug.LogError($"TownManager: 找不到 UnitData '{unitData.unitName}' 对应的预制件！请在 Inspector 中为 TownManager 配置 unitPrefabs 列表。");
+            return;
+        }
+
+        GameObject unitObj = Instantiate(prefab);
+        Unit unit = unitObj.GetComponent<Unit>();
+        if (unit == null)
+        {
+            Debug.LogError($"TownManager: 预制件 '{prefab.name}' 缺少 Unit 组件！");
+            Destroy(unitObj);
+            return;
+        }
+
+        if (unitObj.GetComponent<Selectable>() == null)
+            unitObj.AddComponent<Selectable>();
+
+        unit.InitPosition(position.x, position.y);
+
+        if (Console.Instance != null && Console.Instance.debugMode == DebugMode.On)
+        {
+            Debug.Log($"城镇生产了单位 {unitData.unitName} 在 ({position.x}, {position.y})");
+        }
+    }
+
+    /// <summary>
+    /// 通过单位名称（UnitData.unitName）查找对应的预制件
+    /// </summary>
+    private GameObject GetUnitPrefabByName(string unitName)
+    {
+        foreach (var entry in unitPrefabs)
+        {
+            if (entry.unitData != null && entry.unitData.unitName == unitName)
+                return entry.prefab;
+        }
+        return null;
+    }
+
+    [System.Serializable]
+    public struct UnitPrefabEntry
+    {
+        public UnitData unitData;
+        public GameObject prefab;
     }
 }

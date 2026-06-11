@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec3044257265db9459506942587fb0f9, type: 3}
   m_Name: Textile Workshop
   m_EditorClassIdentifier: 
-  townsName: 
+  townsName: Textile Workshop
   cost:
     foodProduction: 0
-    materialProduction: 4
+    materialProduction: 1
   production:
     foodProduction: 0
     materialProduction: 2
   maintenance:
-    foodProduction: 2
+    foodProduction: 1
     materialProduction: 0
   prerequisite: []

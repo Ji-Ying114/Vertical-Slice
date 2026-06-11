@@ -13,6 +13,7 @@ public enum UnitType
 public class UnitData : ScriptableObject
 {
     [Header("基本属性")]
+    public GameObject unitPrefab;
     public UnitType unitType;
     public string unitName;
     public int movementPoint;

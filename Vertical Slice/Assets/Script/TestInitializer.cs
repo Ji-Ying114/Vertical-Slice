@@ -6,10 +6,10 @@ public class TestInitializer : MonoBehaviour
     [SerializeField] private int width = 20;
     [SerializeField] private int height = 20;
     [SerializeField] private GameObject scoutUnitPrefab;
+    [SerializeField] private Size initialScouts = Size.One;
 
     private void Start()
     {
-        // 1. 生成地图
         if (MapGenerator.Instance == null)
         {
             Debug.LogError("TestInitializer: MapGenerator.Instance 不存在！");
@@ -17,7 +17,6 @@ public class TestInitializer : MonoBehaviour
         }
         MapGenerator.Instance.GenerateMap(width, height);
 
-        // 2. 渲染地图
         if (MapRenderer.Instance != null)
         {
             MapRenderer.Instance.RenderMap();
@@ -27,7 +26,6 @@ public class TestInitializer : MonoBehaviour
             Debug.LogWarning("TestInitializer: MapRenderer.Instance 不存在，地图未渲染");
         }
 
-        // 3. 收集所有非水下单元格
         Tile[,] tiles = MapGenerator.Instance.tiles;
         int mapWidth = tiles.GetLength(0);
         int mapHeight = tiles.GetLength(1);
@@ -50,10 +48,8 @@ public class TestInitializer : MonoBehaviour
             return;
         }
 
-        // 随机选择出生点
         Vector2Int spawnPos = landTiles[Random.Range(0, landTiles.Count)];
 
-        // 4. 创建起始城镇（必须在地图上先生成城镇，再生成单位，顺序可调）
         if (TownManager.Instance != null)
         {
             TownManager.Instance.CreateTown("Capital", new TileID { x = spawnPos.x, y = spawnPos.y }, 1);
@@ -64,42 +60,79 @@ public class TestInitializer : MonoBehaviour
             Debug.LogError("TestInitializer: TownManager.Instance 不存在，无法创建城镇！");
         }
 
-        // 5. 生成侦察单位
         if (scoutUnitPrefab == null)
         {
             Debug.LogError("TestInitializer: scoutUnitPrefab 未赋值！");
             return;
         }
 
-        GameObject unitObj = Instantiate(scoutUnitPrefab);
-        Unit unit = unitObj.GetComponent<Unit>();
-        if (unit == null)
+        int scoutCount = (int)initialScouts + 1;
+
+        // 收集相邻陆地格子
+        List<Vector2Int> adjLand = new List<Vector2Int>();
+        var neighbors = DirectionHelper.Instance.GetAllValidNeighbors(spawnPos.x, spawnPos.y);
+        foreach (var n in neighbors)
         {
-            Debug.LogError("TestInitializer: 侦察单位预制体缺少 Unit 组件！");
-            Destroy(unitObj);
-            return;
+            Tile tile = MapGenerator.Instance.GetTile(n.x, n.y);
+            if (tile != null && tile.GetTileData().terrainType != TerrainType.Default)
+                adjLand.Add(n);
         }
 
-        // 确保单位可以被选中
-        if (unitObj.GetComponent<Selectable>() == null)
+        // 随机打乱
+        for (int i = 0; i < adjLand.Count; i++)
         {
-            unitObj.AddComponent<Selectable>();
+            int r = Random.Range(i, adjLand.Count);
+            var temp = adjLand[i];
+            adjLand[i] = adjLand[r];
+            adjLand[r] = temp;
         }
 
-        unit.InitPosition(spawnPos.x, spawnPos.y);
+        for (int i = 0; i < scoutCount; i++)
+        {
+            Vector2Int pos;
+            if (i == 0)
+            {
+                pos = spawnPos;
+            }
+            else
+            {
+                if (adjLand.Count == 0) break;
+                pos = adjLand[0];
+                adjLand.RemoveAt(0);
+            }
 
-        // 6. 移动摄像机到单位/城镇位置
+            GameObject unitObj = Instantiate(scoutUnitPrefab);
+            Unit unit = unitObj.GetComponent<Unit>();
+            if (unit == null)
+            {
+                Debug.LogError("TestInitializer: 侦察单位预制体缺少 Unit 组件！");
+                Destroy(unitObj);
+                continue;
+            }
+
+            if (unitObj.GetComponent<Selectable>() == null)
+                unitObj.AddComponent<Selectable>();
+
+            unit.InitPosition(pos.x, pos.y);
+        }
+
         Camera mainCamera = Camera.main;
         if (mainCamera != null)
         {
             Vector3 worldPos = MapGenerator.Instance.worldPosition(spawnPos.x, spawnPos.y);
             mainCamera.transform.position = new Vector3(worldPos.x, worldPos.y, -10f);
         }
-        else
-        {
-            Debug.LogError("TestInitializer: 未找到主摄像机！");
-        }
 
-        Debug.Log($"TestInitializer: 地图 ({width}x{height}) 已生成，城镇和侦察单位出生在 ({spawnPos.x}, {spawnPos.y})");
+        // 初始化战争迷雾
+        if (FogOfWarRenderer.Instance != null)
+            FogOfWarRenderer.Instance.InitializeFogMap();
+
+        if (FogOfWarManager.Instance != null)
+            FogOfWarManager.Instance.UpdateKnownTiles(GameController.currentPlayer);
+
+        if (FogOfWarRenderer.Instance != null)
+            FogOfWarRenderer.Instance.UpdateFogDisplay();
+
+        Debug.Log($"TestInitializer: 地图 ({width}x{height}) 已生成，城镇和 {scoutCount} 个侦察单位出生在 ({spawnPos.x}, {spawnPos.y}) 附近");
     }
 }

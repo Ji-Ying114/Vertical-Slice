@@ -2,6 +2,21 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
+
+[System.Serializable]
+public struct BuildingButtonEntry
+{
+    public Button button;
+    public Building building;
+}
+
+[System.Serializable]
+public struct UnitButtonEntry
+{
+    public Button button;
+    public UnitData unitData;
+}
 
 public class TownPanel : MonoBehaviour
 {
@@ -20,6 +35,10 @@ public class TownPanel : MonoBehaviour
     [SerializeField] private TMP_Text buildingText;
     [SerializeField] private Button quitButton;
     [SerializeField] private RenamingPanel renamingPanel;
+
+    [Header("Production Buttons")]
+    [SerializeField] private List<BuildingButtonEntry> buildingButtons = new List<BuildingButtonEntry>();
+    [SerializeField] private List<UnitButtonEntry> unitButtons = new List<UnitButtonEntry>();
 
     private Town currentTown;
 
@@ -40,6 +59,18 @@ public class TownPanel : MonoBehaviour
             nameButton.onClick.AddListener(OnNameClicked);
         if (quitButton != null)
             quitButton.onClick.AddListener(Hide);
+
+        // 为所有生产按钮绑定事件
+        foreach (var entry in buildingButtons)
+        {
+            if (entry.button != null)
+                entry.button.onClick.AddListener(() => OnBuildingButtonClicked(entry.building));
+        }
+        foreach (var entry in unitButtons)
+        {
+            if (entry.button != null)
+                entry.button.onClick.AddListener(() => OnUnitButtonClicked(entry.unitData));
+        }
     }
 
     void Update()
@@ -58,14 +89,13 @@ public class TownPanel : MonoBehaviour
     public void ShowTown(Town town)
     {
         currentTown = town;
-        Canvas.ForceUpdateCanvases();
         if (panelRoot != null)
             panelRoot.SetActive(true);
 
         UpdateStaticTexts();
         UpdateDynamicTexts();
+        UpdateProductionButtonsHighlight();
 
-        // 如果有闲置人口，进入扩张模式并显示候选地块
         if (town.AvailableExpansions > 0 && TownManager.Instance != null)
         {
             TownManager.Instance.EnterExpansionMode(town.GetID());
@@ -83,7 +113,6 @@ public class TownPanel : MonoBehaviour
         if (TownManager.Instance != null)
             TownManager.Instance.ExitExpansionMode();
 
-        // 只清除候选地块，不再清除领土
         if (TownRenderer.Instance != null)
             TownRenderer.Instance.ClearExpansionCandidates();
     }
@@ -99,6 +128,43 @@ public class TownPanel : MonoBehaviour
         if (currentTown != null && renamingPanel != null)
         {
             renamingPanel.Show(currentTown);
+        }
+    }
+
+    private void OnBuildingButtonClicked(Building building)
+    {
+        if (currentTown == null) return;
+        currentTown.SetCurrentProduction(building);
+        UpdateProductionButtonsHighlight();
+    }
+
+    private void OnUnitButtonClicked(UnitData unitData)
+    {
+        if (currentTown == null) return;
+        currentTown.SetCurrentProduction(unitData);
+        UpdateProductionButtonsHighlight();
+    }
+
+    /// <summary>
+    /// 更新按钮高亮：当前正在生产的项目对应的按钮设为不可交互（或改变颜色）
+    /// </summary>
+    private void UpdateProductionButtonsHighlight()
+    {
+        if (currentTown == null) return;
+
+        ProductionQueueItem currentProd = currentTown.GetCurrentProduction();
+
+        foreach (var entry in buildingButtons)
+        {
+            if (entry.button == null) continue;
+            bool isCurrent = currentProd != null && currentProd.IsBuilding && currentProd.building == entry.building;
+            entry.button.interactable = !isCurrent; // 或者保留可交互但改变颜色，这里用不可交互表示“正在建造”
+        }
+        foreach (var entry in unitButtons)
+        {
+            if (entry.button == null) continue;
+            bool isCurrent = currentProd != null && currentProd.IsUnit && currentProd.unitData == entry.unitData;
+            entry.button.interactable = !isCurrent;
         }
     }
 
@@ -148,6 +214,9 @@ public class TownPanel : MonoBehaviour
 
     private string GetConstructionText()
     {
-        return "";
+        if (currentTown == null) return "";
+        var prod = currentTown.GetCurrentProduction();
+        if (prod == null) return "";
+        return $"Building: {prod.Name} (F:{prod.investedFood}/{prod.Cost.foodProduction} M:{prod.investedMaterial}/{prod.Cost.materialProduction})";
     }
 }

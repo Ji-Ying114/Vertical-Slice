@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b882963ac6e90be41ae809bef83273c8, type: 3}
   m_Name: Scout
   m_EditorClassIdentifier: 
+  unitPrefab: {fileID: 8336989169435999424, guid: b12ff8dd291c774479bf1bff262dc596, type: 3}
   unitType: 0
   unitName: Scout
-  movementPoint: 30
+  movementPoint: 20
   hp: 50
   visionRange: 5
   productionCost:
-    foodProduction: 4
+    foodProduction: 1
     materialProduction: 2

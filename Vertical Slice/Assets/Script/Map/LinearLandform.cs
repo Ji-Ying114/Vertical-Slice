@@ -15,6 +15,7 @@ public enum SelectValue
     None,
 
     seaLevel,
+    plainLevel,
     hillLevel,
 
     frigidLevel,

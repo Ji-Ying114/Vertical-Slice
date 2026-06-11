@@ -52,6 +52,7 @@ internal struct EnabledLandformSettings
 public struct GenerationValues
 {
     public float seaLevel;
+    public float plainLevel;
     public float hillLevel;
 
     public float frigidLevel;
@@ -248,6 +249,10 @@ public class MapGenerator : MonoBehaviour
         if (elevation < generationValues.seaLevel)
         {
             return TerrainType.Default;
+        }
+        else if (elevation < generationValues.plainLevel)
+        {
+            return TerrainType.Plains;
         }
         else if (elevation < generationValues.hillLevel)
         {
@@ -714,7 +719,7 @@ public class MapGenerator : MonoBehaviour
     {
         return valueType switch
         {
-            SelectValue.seaLevel or SelectValue.hillLevel => elevationMap[x, y],
+            SelectValue.seaLevel or SelectValue.plainLevel or SelectValue.hillLevel => elevationMap[x, y],
             SelectValue.frigidLevel or SelectValue.temperateLevel => temperatureMap[x, y],
             SelectValue.desertLevel or SelectValue.grasslandLevel or SelectValue.forestLevel => humidityMap[x, y],
             _ => 0f,
@@ -727,6 +732,7 @@ public class MapGenerator : MonoBehaviour
         {
             SelectValue.None => 0f,
             SelectValue.seaLevel => generationValues.seaLevel,
+            SelectValue.plainLevel => generationValues.plainLevel,
             SelectValue.hillLevel => generationValues.hillLevel,
             SelectValue.frigidLevel => generationValues.frigidLevel,
             SelectValue.temperateLevel => generationValues.temperateLevel,

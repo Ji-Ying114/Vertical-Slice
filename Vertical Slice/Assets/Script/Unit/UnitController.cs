@@ -21,7 +21,6 @@ public class UnitController : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("Multiple instances of UnitController detected. Destroying duplicate.");
             Destroy(this);
             return;
         }
@@ -136,20 +135,13 @@ public class UnitController : MonoBehaviour
         int startMP = currentSelectedUnit.currentMovementPoint;
         int consumedMP = startMP - remainingAfterMove;
 
-        // 保存本地引用，防止动画期间选中状态改变导致回调空引用
         Unit movingUnit = currentSelectedUnit;
-
-        // 立刻扣除移动力
         movingUnit.currentMovementPoint = remainingAfterMove;
-
-        // 锁定移动，防止动画期间再次点击
         isMoving = true;
 
-        // 暂时隐藏旧的移动范围
         if (moveableTileDisplayer != null)
             moveableTileDisplayer.ClearAllTiles();
 
-        // 执行移动动画或瞬移
         UnitAnimation anim = movingUnit.GetComponent<UnitAnimation>();
         if (anim != null)
         {
@@ -157,13 +149,15 @@ public class UnitController : MonoBehaviour
 
             anim.StartMovement(path, () =>
             {
-                // 动画完成：更新单位逻辑坐标
                 movingUnit.ChangePosition(targetPos.x, targetPos.y);
-
-                // 解锁移动
                 isMoving = false;
 
-                // 刷新移动范围（如果仍然选中该单位）
+                // 移动后更新战争迷雾
+                if (FogOfWarManager.Instance != null)
+                    FogOfWarManager.Instance.UpdateKnownTiles(GameController.currentPlayer);
+                if (FogOfWarRenderer.Instance != null)
+                    FogOfWarRenderer.Instance.UpdateFogDisplay();
+
                 if (currentSelectedUnit == movingUnit)
                 {
                     RefreshMovementRange();
@@ -174,10 +168,13 @@ public class UnitController : MonoBehaviour
         }
         else
         {
-            // 无动画组件，直接瞬移
             movingUnit.ChangePosition(targetPos.x, targetPos.y);
-
             isMoving = false;
+
+            if (FogOfWarManager.Instance != null)
+                FogOfWarManager.Instance.UpdateKnownTiles(GameController.currentPlayer);
+            if (FogOfWarRenderer.Instance != null)
+                FogOfWarRenderer.Instance.UpdateFogDisplay();
 
             if (currentSelectedUnit == movingUnit)
             {

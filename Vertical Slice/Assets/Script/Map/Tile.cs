@@ -1,41 +1,43 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-    public struct TileID
-    {
-        public int x;
-        public int y;
-    }
-    public struct TileTemporalFactor
-    {
-        public TileFactor tileFactor;
-        public int duration;
-        public int passedTurns;
-        public float multiplier;
-    }
-    public struct TileData
-    {
-        public TerrainType terrainType;
-        public BiomeType biomeType;
-        public TemperatureType temperatureType;
-        public LandformType[] landformType;
-        public MapResourceType mapResourceType;
+public struct TileID
+{
+    public int x;
+    public int y;
+}
 
-        public List<TileTemporalFactor> tileTemporalFactors;
-    }
-    public struct MovementCost
-    {
-        public int forLightUnit;
-        public int forMediumUnit;
-        public int forHeavyUnit;
-    }
-    [System.Serializable]
-    public struct ResourceProduction
-    {
-        public float foodProduction;
-        public float materialProduction;
-    }
+public struct TileTemporalFactor
+{
+    public TileFactor tileFactor;
+    public int duration;
+    public int passedTurns;
+    public float multiplier;
+}
+
+public struct TileData
+{
+    public TerrainType terrainType;
+    public BiomeType biomeType;
+    public TemperatureType temperatureType;
+    public LandformType[] landformType;
+    public MapResourceType mapResourceType;
+    public List<TileTemporalFactor> tileTemporalFactors;
+}
+
+public struct MovementCost
+{
+    public int forLightUnit;
+    public int forMediumUnit;
+    public int forHeavyUnit;
+}
+
+[System.Serializable]
+public struct ResourceProduction
+{
+    public float foodProduction;
+    public float materialProduction;
+}
 
 public class Tile
 {
@@ -45,6 +47,10 @@ public class Tile
     private ResourceProduction resourceProduction;
     private int owningTown;
 
+    // 战争迷雾
+    private List<int> knownToPlayer;
+    private List<int> shownToPlayer;
+
     public TileID GetTileID() => tileID;
     public TileData GetTileData() => tileData;
     public int GetLightUnitMovementCost() => movementCost.forLightUnit;
@@ -53,10 +59,12 @@ public class Tile
     public ResourceProduction GetResourceProduction() => resourceProduction;
     public int GetOwningTown() => owningTown;
 
+    public bool IsKnownByPlayer(int playerIndex) => knownToPlayer.Contains(playerIndex);
+    public bool IsShownByPlayer(int playerIndex) => shownToPlayer.Contains(playerIndex);
+
     public Tile(TileID id)
     {
         tileID = id;
-        // 先用默认值初始化 tileData，避免未赋值字段导致额外消耗计算错误
         tileData = new TileData
         {
             terrainType = TerrainType.Default,
@@ -66,22 +74,21 @@ public class Tile
             mapResourceType = null,
             tileTemporalFactors = new List<TileTemporalFactor>(),
         };
-        // 基于默认 tileData 计算一次（后续会被 SetTileData 覆盖）
         movementCost = ComputeMovementCost();
         resourceProduction = ComputeResourceProduction();
         owningTown = -1;
+
+        knownToPlayer = new List<int>();
+        shownToPlayer = new List<int>();
     }
 
     public void SetTileData(TileData newTileData)
     {
         tileData = newTileData;
-        // 根据新的真实数据重新计算移动消耗
         movementCost = ComputeMovementCost();
     }
-    public void SetOwningTown(int town)
-    {
-        owningTown = town;
-    }
+
+    public void SetOwningTown(int town) => owningTown = town;
 
     public void AddTileFactor(TileFactor tileFactor, int duration, float multiplier)
     {
@@ -98,33 +105,42 @@ public class Tile
             tileData.tileTemporalFactors.Add(factor);
     }
 
+    // 迷雾操作
+    public void RevealToPlayer(int playerIndex)
+    {
+        if (!knownToPlayer.Contains(playerIndex))
+            knownToPlayer.Add(playerIndex);
+    }
+
+    public void ShowToPlayer(int playerIndex)
+    {
+        if (!shownToPlayer.Contains(playerIndex))
+            shownToPlayer.Add(playerIndex);
+    }
+
+    public void HideFromPlayer(int playerIndex)
+    {
+        shownToPlayer.Remove(playerIndex);
+    }
+
     private MovementCost ComputeMovementCost()
     {
         int extra = 0;
-
-        // 地形附加消耗
         switch (tileData.terrainType)
         {
-            case TerrainType.Hills:    extra += 1; break;
+            case TerrainType.Hills: extra += 1; break;
             case TerrainType.Mountains: extra += 2; break;
         }
-
-        // 生物群系附加消耗
         switch (tileData.biomeType)
         {
             case BiomeType.Forest: extra += 1; break;
-            case BiomeType.Swamp:  extra += 2; break;
+            case BiomeType.Swamp: extra += 2; break;
         }
-
-        // 地貌附加消耗
         if (tileData.landformType != null)
         {
             foreach (LandformType landform in tileData.landformType)
-            {
                 extra += landform.additionalMovementCost;
-            }
         }
-
         return new MovementCost
         {
             forLightUnit = 5 + extra,
@@ -132,16 +148,9 @@ public class Tile
             forHeavyUnit = 5 + extra * 3
         };
     }
+
     private ResourceProduction ComputeResourceProduction()
     {
-        int food = 1;
-        int material = 1;
-
-        // further work to be done here
-        return new ResourceProduction
-        {
-            foodProduction = food,
-            materialProduction = material
-        };
+        return new ResourceProduction { foodProduction = 1, materialProduction = 1 };
     }
 }
